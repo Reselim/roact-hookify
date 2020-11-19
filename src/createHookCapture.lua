@@ -56,6 +56,28 @@ local function createHookCapture()
 
 		function component:init()
 			self.hooks = {}
+			self.handlers = {}
+		end
+
+		function component:register(handlerName, newHandler)
+			assert(handlerName ~= "render", ":render() cannot be registered as a handler")
+			assert(handlerName ~= "init", ":init() cannot be registered as a handler")
+
+			local handlerList = self.handlers[handlerName]
+
+			if not handlerList then
+				handlerList = {}
+
+				self[handlerName] = function(_, ...)
+					for _, handler in ipairs(handlerList) do
+						handler(...)
+					end
+				end
+
+				self.handlers[handlerName] = handlerList
+			end
+
+			table.insert(handlerList, newHandler)
 		end
 
 		function component:render()
